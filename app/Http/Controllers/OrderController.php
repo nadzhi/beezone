@@ -10,6 +10,7 @@ use App\Supplier;
 use App\SupplierProduct;
 use App\Color;
 use App\City;
+use App\Brand;
 use App\OrderDetail;
 use App\CouponUsage;
 use Auth;
@@ -29,12 +30,12 @@ class OrderController extends Controller
     public function index()
     {
         $orders = DB::table('orders')
-                    ->orderBy('code', 'desc')
-                    ->join('order_details', 'orders.id', '=', 'order_details.order_id')
-                    ->where('order_details.seller_id', Auth::user()->id)
-                    ->select('orders.id')
-                    ->distinct()
-                    ->paginate(9);
+            ->orderBy('code', 'desc')
+            ->join('order_details', 'orders.id', '=', 'order_details.order_id')
+            ->where('order_details.seller_id', Auth::user()->id)
+            ->select('orders.id')
+            ->distinct()
+            ->paginate(9);
 
         return view('frontend.supplier.orders', compact('orders'));
     }
@@ -47,12 +48,12 @@ class OrderController extends Controller
     public function admin_orders(Request $request)
     {
         $orders = DB::table('orders')
-                    ->orderBy('code', 'desc')
-                    ->join('order_details', 'orders.id', '=', 'order_details.order_id')
-                    ->where('order_details.seller_id', Auth::user()->id)
-                    ->select('orders.id')
-                    ->distinct()
-                    ->paginate(9);
+            ->orderBy('code', 'desc')
+            ->join('order_details', 'orders.id', '=', 'order_details.order_id')
+            ->where('order_details.seller_id', Auth::user()->id)
+            ->select('orders.id')
+            ->distinct()
+            ->paginate(9);
 
         return view('orders.index', compact('orders'));
     }
@@ -97,164 +98,147 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        $order = new Order;
-        if(Auth::check()){
-            $order->user_id = Auth::user()->id;
+        $brands = [];
+        $admin_seller_id = 9;
+        foreach (Session::get('cart') as $key => $cartItem){
+            $product = Product::find($cartItem['id']);
+            $brands[$product->brand_id] = $product->brand_id;
         }
-        else{
-            $order->guest_id = mt_rand(100000, 999999);
-        }
 
 
-		$shipping_info = $request->session()->get('shipping_info');
-	 	$order->lat = $shipping_info["lat"];
-	 	$order->lng = $shipping_info["lng"];
-	 	$order->city_id = $shipping_info["city"];
-		
-		if($shipping_info["city"] < 1 OR $shipping_info["city"] > 17){
-			$shipping_info["city"] = 1;
-		}
-		$city = City::find($shipping_info["city"]);
-		
-		$shipping_info["city"] = $city->name;
-        $order->shipping_address = json_encode($shipping_info);
-        $order->payment_type = $request->payment_option;
-        $order->code = date('Ymd-his');
-        $order->date = strtotime('now');
-        if($order->save()){
-            $subtotal = 0;
-            $tax = 0;
-            $shipping = 0;
-            foreach (Session::get('cart') as $key => $cartItem){
-                $product = Product::find($cartItem['id']);
-                $subtotal += $cartItem['price']*$cartItem['quantity'];
-                $tax += $cartItem['tax']*$cartItem['quantity'];
-                $shipping += $cartItem['shipping']*$cartItem['quantity'];
-                $product_variation = null;
-                if(isset($cartItem['color'])){
-                    $product_variation .= Color::where('code', $cartItem['color'])->first()->name;
-                }
-                foreach (json_decode($product->choice_options) as $choice){
-                    $str = $choice->name; // example $str =  choice_0
-                    if ($product_variation != null) {
-                        $product_variation .= '-'.str_replace(' ', '', $cartItem[$str]);
-                    }
-                    else {
-                        $product_variation .= str_replace(' ', '', $cartItem[$str]);
-                    }
-                }
+        foreach($brands as $brand_id){
+            $brand = Brand::find($brand_id);
 
-                if($product_variation != null){
-                    $variations = json_decode($product->variations);
-                    $variations->$product_variation->qty -= $cartItem['quantity'];
-                    $product->variations = json_encode($variations);
-                    $product->save();
-                }
-
-                $supplier_product = false;
-                if(Auth::user()->referal != null){
-                    $supplier_product = DB::table('supplier_products')
-                            ->where([['user_id', "=", Auth::user()->referal],['product_id', "=", $product->id]])->first();
-                }
-
-                $order_detail = new OrderDetail;
-                $order_detail->order_id  = $order->id;
-                if($supplier_product){
-                    if($order_detail->quantity <= $supplier_product->count){
-                        $order_detail->seller_id = Auth::user()->referal;
-						
-						$suppler_product_new = SupplierProduct::where([ ["product_id", "=", $product->id] , ["user_id","=",Auth::user()->referal] ])->first();
-						if(isset($suppler_product_new)){
-							$suppler_product_new->count = $suppler_product_new->count - $cartItem['quantity'];
-							$suppler_product_new->save();
-						}
-                    }
-                }
-                else{
-                    $order_detail->seller_id = 9;
-                }
-                $order_detail->product_id = $product->id;
-                $order_detail->level = $cartItem["level"];
-                $order_detail->variation = $product_variation;
-                $order_detail->price = $cartItem['price'] * $cartItem['quantity'];
-                $order_detail->tax = $cartItem['tax'] * $cartItem['quantity'];
-                $order_detail->shipping_cost = $cartItem['shipping']*$cartItem['quantity'];
-                $order_detail->quantity = $cartItem['quantity'];
-                $order_detail->save();
-				
-				
-				
-
-				if($cartItem["gift"]){
-					$product_gift = new ProductGift;
-					$product_gift->order_id = $order->id;
-					$product_gift->product_name = $cartItem["gift"]["name"];
-					$product_gift->count = intval($cartItem["quantity"]/$cartItem["gift"]["count"])*$cartItem["gift"]["product_count"];
-					$product_gift->save();
-				}
-			
-				
-
-                $product->num_of_sale++;
-                $product->save();
-				
-				$suppler_product = SupplierProduct::where([ ["product_id", "=", $product->id] , ["user_id","=",Auth::user()->id] ])->first();
-				if(!isset($suppler_product)){
-					$supplier_product_new = new SupplierProduct();
-					$supplier_product_new->product_id = $product->id;
-					$supplier_product_new->user_id = Auth::user()->id;
-					$supplier_product_new->count = $cartItem['quantity'];
-					$supplier_product_new->save();
-				}
-				else{
-					$suppler_product->count = $suppler_product->count + $cartItem['quantity'];
-					$suppler_product->save();
-				}
-				
+            $order = new Order;
+            if(Auth::check()){
+                $order->user_id = Auth::user()->id;
+            }else{
+                $order->guest_id = mt_rand(100000, 999999);
             }
 
-			
-			
-			
-            $order->grand_total = $subtotal + $tax + $shipping;
 
-            if(Session::has('coupon_discount')){
-                $order->grand_total -= Session::get('coupon_discount');
-                $order->coupon_discount = Session::get('coupon_discount');
+            $shipping_info = $request->session()->get('shipping_info');
+            $order->lat = $shipping_info["lat"];
+            $order->lng = $shipping_info["lng"];
+            $order->city_id = $shipping_info["city"];
 
-                $coupon_usage = new CouponUsage;
-                $coupon_usage->user_id = Auth::user()->id;
-                $coupon_usage->coupon_id = Session::get('coupon_id');
-                $coupon_usage->save();
+
+            if($shipping_info["city"] < 1 OR $shipping_info["city"] > 17){
+                $shipping_info["city"] = 1;
+            }
+            $city = City::find($shipping_info["city"]);
+
+            $shipping_info["city"] = $city->name;
+            $order->shipping_address = json_encode($shipping_info);
+            $order->payment_type = $request->payment_option;
+            $order->code = $brand->code.date('Ymd-his');
+            $order->date = strtotime('now');
+            if($order->save()){
+                $subtotal = 0;
+                $tax = 0;
+                $shipping = 0;
+                foreach (Session::get('cart') as $key => $cartItem){
+                    $product = Product::find($cartItem['id']);
+                    if($brand_id == $product["brand_id"]){
+                        $subtotal += $cartItem['price']*$cartItem['quantity'];
+                        $tax += $cartItem['tax']*$cartItem['quantity'];
+                        $shipping += $cartItem['shipping']*$cartItem['quantity'];
+                        $product_variation = null;
+
+                        $supplier_product = false;
+                        if(Auth::user()->referal != null){
+                            $supplier_product = DB::table('supplier_products')
+                                ->where([['user_id', "=", Auth::user()->referal],['product_id', "=", $product->id]])->first();
+                        }
+                        $order_detail = new OrderDetail;
+                        $order_detail->order_id  = $order->id;
+                        if($supplier_product){
+                            if($order_detail->quantity <= $supplier_product->count){
+                                $order_detail->seller_id = Auth::user()->referal;
+                                $suppler_product_new = SupplierProduct::where([ ["product_id", "=", $product->id] , ["user_id","=",Auth::user()->referal] ])->first();
+                                if(isset($suppler_product_new)){
+                                    $suppler_product_new->count = $suppler_product_new->count - $cartItem['quantity'];
+                                    $suppler_product_new->save();
+                                }
+                            }
+                        }
+                        else{
+                            $order_detail->seller_id = $admin_seller_id;
+                        }
+                        $order_detail->product_id = $product->id;
+                        $order_detail->level = $cartItem["level"];
+                        $order_detail->variation = $product_variation;
+                        $order_detail->price = $cartItem['price'] * $cartItem['quantity'];
+                        $order_detail->tax = $cartItem['tax'] * $cartItem['quantity'];
+                        $order_detail->shipping_cost = $cartItem['shipping']*$cartItem['quantity'];
+                        $order_detail->quantity = $cartItem['quantity'];
+                        $order_detail->save();
+
+
+
+
+                        if($cartItem["gift"]){
+                            $product_gift = new ProductGift;
+                            $product_gift->order_id = $order->id;
+                            $product_gift->product_name = $cartItem["gift"]["name"];
+                            $product_gift->count = intval($cartItem["quantity"]/$cartItem["gift"]["count"])*$cartItem["gift"]["product_count"];
+                            $product_gift->save();
+                        }
+
+
+
+                        $product->num_of_sale++;
+                        $product->save();
+
+                        $suppler_product = SupplierProduct::where([ ["product_id", "=", $product->id] , ["user_id","=",Auth::user()->id] ])->first();
+                        if(!isset($suppler_product)){
+                            $supplier_product_new = new SupplierProduct();
+                            $supplier_product_new->product_id = $product->id;
+                            $supplier_product_new->user_id = Auth::user()->id;
+                            $supplier_product_new->count = $cartItem['quantity'];
+                            $supplier_product_new->save();
+                        }
+                        else{
+                            $suppler_product->count = $suppler_product->count + $cartItem['quantity'];
+                            $suppler_product->save();
+                        }
+                    }
+                }
+
+
+
+
+                $order->grand_total = $subtotal + $tax + $shipping;
+                $order->save();
+
+
+
+                //stores the pdf for invoice
+                $pdf = PDF::setOptions([
+                    'isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true,
+                    'logOutputFile' => storage_path('logs/log.htm'),
+                    'tempDir' => storage_path('logs/')
+                ])->loadView('invoices.customer_invoice', compact('order'));
+                $output = $pdf->output();
+                file_put_contents('public/invoices/'.'Order#'.$order->code.'.pdf', $output);
+
+                $array['view'] = 'emails.invoice';
+                $array['subject'] = 'Order Placed - '.$order->code;
+                $array['from'] = env('MAIL_USERNAME');
+                $array['content'] = 'Hi. Your order has been placed';
+                $array['file'] = 'public/invoices/Order#'.$order->code.'.pdf';
+                $array['file_name'] = 'Order#'.$order->code.'.pdf';
+
+                //sends email to customer with the invoice pdf attached
+                /*if(env('MAIL_USERNAME') != null && env('MAIL_PASSWORD') != null){
+                    Mail::to($request->session()->get('shipping_info')['email'])->queue(new InvoiceEmailManager($array));
+                }*/
+                unlink($array['file']);
+
+                $request->session()->put('order_id', $order->id);
+
             }
 
-            $order->save();
-			
-			
-
-            //stores the pdf for invoice
-            $pdf = PDF::setOptions([
-                            'isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true,
-                            'logOutputFile' => storage_path('logs/log.htm'),
-                            'tempDir' => storage_path('logs/')
-                        ])->loadView('invoices.customer_invoice', compact('order'));
-            $output = $pdf->output();
-    		file_put_contents('public/invoices/'.'Order#'.$order->code.'.pdf', $output);
-
-            $array['view'] = 'emails.invoice';
-            $array['subject'] = 'Order Placed - '.$order->code;
-            $array['from'] = env('MAIL_USERNAME');
-            $array['content'] = 'Hi. Your order has been placed';
-            $array['file'] = 'public/invoices/Order#'.$order->code.'.pdf';
-            $array['file_name'] = 'Order#'.$order->code.'.pdf';
-
-            //sends email to customer with the invoice pdf attached
-            /*if(env('MAIL_USERNAME') != null && env('MAIL_PASSWORD') != null){
-                Mail::to($request->session()->get('shipping_info')['email'])->queue(new InvoiceEmailManager($array));
-            }*/
-            unlink($array['file']);
-			
-            $request->session()->put('order_id', $order->id);
         }
     }
 
@@ -343,9 +327,9 @@ class OrderController extends Controller
         $status = 'paid';
         foreach($order->orderDetails as $key => $orderDetail){
             if($orderDetail->payment_status != 'paid'){
-				if($orderDetail->payment_status == 'consignation'){
-					$status = 'consignation';
-				}
+                if($orderDetail->payment_status == 'consignation'){
+                    $status = 'consignation';
+                }
                 $status = 'unpaid';
             }
         }
