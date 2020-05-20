@@ -188,6 +188,8 @@ window.onload = function(){
 <script src="{{ asset('frontend/js/jquery.share.js') }}"></script>
 <script src="{{ asset('frontend/js/owl.carousel.js') }}"></script>
 
+<script src="{{ asset('frontend/js/jquery.maskedinput.js') }}"></script>
+
 <script type="text/javascript">
     function showFrontendAlert(type, message){
         if(type == 'danger'){
@@ -236,13 +238,13 @@ window.onload = function(){
 @if(Session::has('new_level'))
     <script type="text/javascript">
 		setTimeout(
-        	showLevel('success', '{{ Session::get('new_level') }}'), 
+        	showLevel('success', '{{ Session::get('new_level') }}'),
 			2000
 		);
     </script>
 	@php Session::forget("new_level") @endphp
 @endif
-	
+
 <script>
 
     $(document).ready(function() {
@@ -324,7 +326,7 @@ window.onload = function(){
             location.reload();
         });
     }
-	
+
     function showAddToCartModal(id){
         if(!$('#modal-size').hasClass('modal-lg')){
             $('#modal-size').addClass('modal-lg');
@@ -445,7 +447,7 @@ window.onload = function(){
             showFrontendAlert('warning', 'Пожалуйста, выберите все варианты');
         }
     }
-		
+
 	function buyNowSeller(id){
 		$('#addToCart').modal();
 		$('.c-preloader').show();
@@ -478,7 +480,7 @@ window.onload = function(){
             $('.c-preloader').hide();
         });
     }
-	
+
 	function show_diller_detail(user_id)
     {
         $('#dillers-info-modal-body').html(null);
@@ -508,7 +510,7 @@ window.onload = function(){
             $('.c-preloader').hide();
         });
     }
-	
+
 
      function imageInputInitialize(){
          $('.custom-input-file').each(function() {

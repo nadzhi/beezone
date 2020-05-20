@@ -14,19 +14,25 @@
                             </div>
                             <div class="px-5 py-3 py-lg-5">
                                 <div class="row align-items-center">
+                                    <div class="col-12 mb-3" onselectstart="return false;">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="phone-radio" value="option1" checked="" data-toggle="collapse">
+                                            <label class="form-check-label strong-500" for="phone-radio" style="cursor: pointer;">Вход по телефону</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="email-radio" value="option2" data-toggle="collapse">
+                                            <label class="form-check-label strong-500" for="email-radio" style="cursor: pointer;">Вход по email</label>
+                                        </div>
+                                    </div>
                                     <div class="col-12 col-lg">
                                         <form class="form-default" role="form" action="{{ route('login') }}" method="POST">
                                             @csrf
-											@if($errors->has('email'))
+											@if($errors->has('email') || $errors->has('phone') || $errors->has('password'))
 												<div class="alert alert-danger" role="alert">
-													<strong>{{ __($errors->first('email')) }}</strong>
-												</div>
-											@elseif($errors->has('password'))
-												<div class="alert alert-danger" role="alert">
-													<strong>{{ __($errors->first('password')) }}</strong>
+													<strong>{{ __('Incorrect Login') }}</strong>
 												</div>
 											@endif
-                                            <div class="row">
+                                            <div class="row" id="email-block" style="display: none;">
                                                 <div class="col-12">
                                                     <div class="form-group">
                                                         <!-- <label>{{ __('email') }}</label> -->
@@ -39,7 +45,19 @@
                                                     </div>
                                                 </div>
                                             </div>
-
+                                            <div class="row" id="phone-block">
+                                                <div class="col-12">
+                                                    <div class="form-group">
+                                                    <!-- <label>{{ __('phone') }}</label> -->
+                                                        <div class="input-group input-group--style-1">
+                                                            <input type="text" class="form-control form-control-sm {{ $errors->has('phone') ? ' is-invalid' : '' }}" value="{{ old('phone') }}" placeholder="{{__('Phone')}}" name="phone" id="phone">
+                                                            <span class="input-group-addon">
+                                                                <i class="text-md la la-user"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <div class="row">
                                                 <div class="col-12">
                                                     <div class="form-group">

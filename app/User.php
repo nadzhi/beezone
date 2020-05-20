@@ -16,7 +16,7 @@ class User extends Authenticatable implements MustVerifyEmail
    * @var array
    */
   protected $fillable = [
-    'name', 'email', 'password',
+    'name', 'phone', 'email', 'password',
   ];
 
   /**
@@ -27,6 +27,11 @@ class User extends Authenticatable implements MustVerifyEmail
   protected $hidden = [
     'password', 'remember_token',
   ];
+
+  public function message()
+  {
+      return $this->hasMany(Message::class);
+  }
 
   public function wishlists()
   {

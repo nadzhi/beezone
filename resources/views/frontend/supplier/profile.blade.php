@@ -51,8 +51,8 @@
                                             <input type="text" class="form-control mb-3" placeholder="{{__('Your Name')}}" name="name" value="{{ Auth::user()->name }}">
                                         </div>
                                     </div>
-									
-									
+
+
                                     <div class="row">
                                         <div class="col-md-2">
                                             <label>Имя компании</label>
@@ -61,7 +61,7 @@
                                             <input type="text" class="form-control mb-3" placeholder="Имя компании" name="company_name" value="{{ Auth::user()->company_name }}">
                                         </div>
                                     </div>
-									
+
                                     <div class="row">
                                         <div class="col-md-2">
                                             <label>{{__('Your Email')}}</label>
@@ -95,7 +95,7 @@
                                             </label>
                                         </div>
                                     </div>
-									
+
                                     <div class="row">
                                         <div class="col-md-2">
                                             <label>Удостоверение</label>
@@ -177,12 +177,12 @@
                                             <label>{{__('Phone')}}</label>
                                         </div>
                                         <div class="col-md-10">
-                                            <input type="text" class="form-control mb-3" placeholder="{{__('Your Phone Number')}}" name="phone" value="{{ Auth::user()->phone }}">
+                                            <input type="text" class="form-control mb-3" placeholder="{{__('Your Phone Number')}}" name="phone" value="{{ Auth::user()->phone }}" readonly>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-							
+
 
                             <div class="text-right mt-4">
                                 <button type="submit" class="btn btn-styled btn-base-1">{{__('Update Profile')}}</button>

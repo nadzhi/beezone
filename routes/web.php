@@ -56,12 +56,16 @@ Route::post('/cart/addtocart', 'CartController@addToCart')->name('cart.addToCart
 Route::post('/cart/removeFromCart', 'CartController@removeFromCart')->name('cart.removeFromCart');
 Route::post('/cart/updateQuantity', 'CartController@updateQuantity')->name('cart.updateQuantity');
 
-Route::post('/checkout/payment', 'CheckoutController@checkout')->name('payment.checkout');
-Route::get('/checkout', 'CheckoutController@get_shipping_info')->name('checkout.shipping_info');
-Route::post('/checkout/payment_select', 'CheckoutController@store_shipping_info')->name('checkout.store_shipping_infostore');
-Route::get('/checkout/payment_select', 'CheckoutController@get_payment_info')->name('checkout.payment_info');
-Route::post('/checkout/apply_coupon_code', 'CheckoutController@apply_coupon_code')->name('checkout.apply_coupon_code');
-Route::post('/checkout/remove_coupon_code', 'CheckoutController@remove_coupon_code')->name('checkout.remove_coupon_code');
+Route::group(['middleware' => ['message']], function () {
+    Route::post('/checkout/payment', 'CheckoutController@checkout')->name('payment.checkout');
+    Route::get('/checkout', 'CheckoutController@get_shipping_info')->name('checkout.shipping_info');
+    Route::post('/checkout/payment_select', 'CheckoutController@store_shipping_info')->name('checkout.store_shipping_infostore');
+    Route::get('/checkout/payment_select', 'CheckoutController@get_payment_info')->name('checkout.payment_info');
+    Route::post('/checkout/apply_coupon_code', 'CheckoutController@apply_coupon_code')->name('checkout.apply_coupon_code');
+    Route::post('/checkout/remove_coupon_code', 'CheckoutController@remove_coupon_code')->name('checkout.remove_coupon_code');
+});
+
+
 
 //Paypal START
 Route::get('/paypal/payment/done', 'PaypalController@getDone')->name('payment.done');
@@ -100,28 +104,36 @@ Route::get('/supportpolicy', 'HomeController@supportpolicy')->name('supportpolic
 Route::get('/terms', 'HomeController@terms')->name('terms');
 Route::get('/privacypolicy', 'HomeController@privacypolicy')->name('privacypolicy');
 
+Route::group(['middleware' => ['phone']], function(){
+    Route::get('/phone_new','PhoneController@store')->name('phone.new');
+    Route::post('/phone_new','PhoneController@save')->name('phone.save');
+});
 
+Route::group(['middleware' => ['message.verified']], function(){
+    Route::get('/phone_confirm','PhoneController@confirm')->name('phone.confirm');
+    Route::post('/phone_confirm','PhoneController@check')->name('phone.check');
+});
 
-Route::group(['middleware' => ['user', 'verified']], function(){
+Route::group(['middleware' => ['user', 'message', 'verified']], function(){
 	Route::get('/dashboard', 'HomeController@dashboard')->name('dashboard');
 	Route::get('/dillers', 'HomeController@dillers')->name('dillers.index');
 	Route::post('/dillers/delete', 'HomeController@dillers_delete')->name('delete.dillers');
 	Route::post('/dillers/info', 'HomeController@dillers_info')->name('diller.info');
 	Route::post('/dillers/level', 'HomeController@dillers_level')->name('diller.level');
 	Route::post('/dillers/edit/{id}', 'HomeController@dillers_edit')->name('diller.edit');
-	
-	
+
+
 	Route::get('/payment_methods', 'HomeController@payment_method')->name('payment_method.index');
 	Route::post('/add/payment_methods', 'HomeController@add_payment_method')->name('payment_method.add');
 	Route::post('/payment_method/delete', 'HomeController@delete_payment_method')->name('payment_method.delete');
-	
+
 	Route::post('/orders/combine', 'HomeController@orders_combine')->name('orders.combine');
-	
+
 	Route::get('/profile', 'HomeController@profile')->name('profile');
 	Route::post('/verify_email', 'HomeController@verify_email')->name('verify_email');
-	
+
 	Route::get('/verification/{code}', 'HomeController@verification')->name('verification');
-	
+
 	Route::post('/customer/update-profile', 'HomeController@customer_update_profile')->name('customer.profile.update');
 	Route::post('/update-profile', 'HomeController@update_profile')->name('supplier.profile.update');
 
@@ -173,7 +185,7 @@ Route::group(['middleware' => ['auth']], function(){
 
 	Route::get('invoice/customer/{order_id}', 'InvoiceController@customer_invoice_download')->name('customer.invoice.download');
 	Route::get('invoice/seller/{order_id}', 'InvoiceController@seller_invoice_download')->name('seller.invoice.download');
-	
+
 
 	Route::resource('orders','OrderController');
 	Route::get('/orders/destroy/{id}', 'OrderController@destroy')->name('orders.destroy');

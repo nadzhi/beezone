@@ -20,6 +20,7 @@ class LoginController extends Controller
 
     public function handleProviderCallback($provider)
     {
+
         try {
             $user = Socialite::driver($provider)->stateless()->user();
         } catch (\Exception $e) {
@@ -110,4 +111,19 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+
+    public function username()
+    {
+        $email = request()->input('email');
+//        $phone = request()->input('phone');
+
+
+        if(filter_var($email, FILTER_VALIDATE_EMAIL)){
+            $field = 'email';
+        } else {
+            $field = 'phone';
+        }
+        return $field;
+    }
+
 }

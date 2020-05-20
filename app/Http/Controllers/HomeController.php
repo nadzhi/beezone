@@ -40,19 +40,22 @@ class HomeController extends Controller
     }
 
     public function registration($id = false)
-    {	
+    {
+
 		$user = false;
-		if($id){
+		if($id) {
 			$user = User::where("hash", $id)->first();
-			if($user){
+			if($user) {
 				Session::put('referal', $user->id);
 			}
 		}
-		
-        if(Auth::check()){
+
+        if(Auth::check()) {
             return redirect()->route('home');
         }
+
         return view('frontend.user_registration', compact('user'));
+
     }
 
     // public function user_login(Request $request)
@@ -122,8 +125,8 @@ class HomeController extends Controller
 			$last_day = date("Y-m-t 23:59:59",strtotime("-1 month"));
 			$user_levels = [];
 			$current_orders = Order::where('user_id', Auth::user()->id)->select('id')->get();
-			if(isset($current_orders)){
-				foreach($current_orders as $current_order){
+			if (isset($current_orders)) {
+				foreach($current_orders as $current_order) {
 					$orderDetail = OrderDetail::where([
 						['order_id', '=', $current_order->id],
 						['created_at', '>=', $first_day],
@@ -177,10 +180,10 @@ class HomeController extends Controller
             return view('frontend.supplier.dashboard');
         }
         else{
-			header("Location: https://test.beezone.kz");        	
+			header("Location: https://test.beezone.kz");
         }
     }
-	
+
 	public function dillers()
     {
 		$users = DB::select('SELECT * FROM users WHERE referal = ?', [Auth::user()->id]);
@@ -188,13 +191,13 @@ class HomeController extends Controller
 		$tree = $this->createTreeBranch(Auth::user()->id);
     	return view('frontend.supplier.dillers', compact('users','tree'));
     }
-	
+
     private function createTreeBranch($parent_id)
     {
         $tree = [];
-		
+
         $users_array = User::where('referal', $parent_id)->get()->toArray();
-		
+
 		foreach($users_array as $user){
 			$user["children"] = $this->createTreeBranch($user["id"]);
 			$tree[] = $user;
@@ -202,7 +205,7 @@ class HomeController extends Controller
 
         return $tree;
     }
-	
+
     public function profile(Request $request)
     {
         if(Auth::user()->user_type == 'customer'){
@@ -243,8 +246,8 @@ class HomeController extends Controller
         return back();
     }
 
-	
-	
+
+
     public function update_profile(Request $request)
     {
         $user = Auth::user();
@@ -263,7 +266,7 @@ class HomeController extends Controller
         if($request->hasFile('photo')){
             $user->avatar_original = $request->photo->store('uploads/users');
         }
-		
+
         if($request->hasFile('passport')){
             $user->passport = $request->passport->store('uploads/passports');
         }
@@ -338,9 +341,9 @@ class HomeController extends Controller
         // foreach($files as $file) {
         //     ImageOptimizer::optimize(base_path('public/uploads/categories/').$file);
         // }
-		
+
 		$categories = Category::all();
-		
+
         return view('frontend.index', compact('categories'));
     }
 
@@ -416,7 +419,7 @@ class HomeController extends Controller
     }
 
     public function seller_product_list(Request $request)
-    {   
+    {
         $products_list = [];
         $supplier_products = SupplierProduct::where('user_id', Auth::user()->id)->get();
         foreach ($supplier_products as $supplier_product) {
@@ -642,21 +645,21 @@ class HomeController extends Controller
     public function privacypolicy(){
         return view("frontend.policies.privacypolicy");
     }
-	
+
 	public function setcity($id){
 		$city = City::where('id', $id)->first();
 		Session::put('city', $city->name);
 		Session::put('city_id', $city->id);
 		return redirect()->route('home');
 	}
-	
+
 	public function product_price(Request $request)
     {
         $product  = Product::where('id', $request->product_id)->first();
         if($product!=null){
 			 echo '<p style="padding:0 10px;font-weight:bold;font-size:16px;text-align:center;">'.$product->name.'</p><br />';
-			 $reproduct_price = \App\ProductPrice::where('product_id', $product->id)->get()->toArray(); 
-			 if(count($reproduct_price) > 0): 
+			 $reproduct_price = \App\ProductPrice::where('product_id', $product->id)->get()->toArray();
+			 if(count($reproduct_price) > 0):
 				echo '<table class="table" data-count="'.$product->box_count.'">
 					<thead>
 						<tr>
@@ -668,21 +671,21 @@ class HomeController extends Controller
 						</tr>
 					</thead>
 				<tbody>';
-			
+
 				$product_price = [];
 				foreach ($reproduct_price as $rep_price){
 					$product_price[$rep_price["level"]] = $rep_price;
 				}
-			
-			
-				$counter = 0; 
-				foreach ($product_price as $key => $price): 
+
+
+				$counter = 0;
+				foreach ($product_price as $key => $price):
 					$counter++;
 					if(Auth::check()){
 						$supplier_level_object = SupplierLevel::where([["user_id","=", Auth::user()->id],["brand_id","=", $product->subbrand_id]])->first();
 						if(isset($supplier_level_object)){
 							$supplier_level = SupplierLevel::where([["user_id","=", Auth::user()->id],["brand_id","=", $product->subbrand_id]])->first()->toArray();
-							
+
 							$current_position_level = $supplier_level["level"];
 							if($current_position_level >= array_key_last($product_price)){
 								$current_position_level = array_key_last($product_price);
@@ -705,7 +708,7 @@ class HomeController extends Controller
 											<input type="hidden" name="id" value="'.$product->id.'">
 											<input type="hidden" name="quantity" value="'.$price["count"].'">
 											<input type="hidden" name="level" value="'.$price["level"].'">
-											<button onclick="addSelect('.$price["level"].')" type="button" 
+											<button onclick="addSelect('.$price["level"].')" type="button"
 												class="btn btn-sm btn-styled btn-base-1 btn-icon-left strong-700 hov-bounce hov-shaddow buy__button" style="padding:2px 5px !important;">
 												<i style="font-size:26px;" class="las la-shopping-cart"></i>
 											</button>
@@ -731,7 +734,7 @@ class HomeController extends Controller
 											<input type="hidden" name="id" value="'.$product->id.'">
 											<input type="hidden" name="quantity"  value="'.$price["count"].'">
 											<input type="hidden" name="level" value="'.$current_position_level.'">
-											<button onclick="addSelect('.$price["level"].')" type="button" 
+											<button onclick="addSelect('.$price["level"].')" type="button"
 												class="btn btn-sm btn-styled btn-base-1 btn-icon-left strong-700 hov-bounce hov-shaddow buy__button" style="padding:2px 5px !important;">
 												<i style="font-size:26px;" class="las la-shopping-cart"></i>
 											</button>
@@ -758,7 +761,7 @@ class HomeController extends Controller
 											<input type="hidden" name="id" value="'.$product->id.'">
 											<input type="hidden" name="quantity" value="'.$price["count"].'">
 											<input type="hidden" name="level" value="'.$price["level"].'">
-											<button onclick="addSelect('.$price["level"].')" type="button" 
+											<button onclick="addSelect('.$price["level"].')" type="button"
 												class="btn btn-sm btn-styled btn-base-1 btn-icon-left strong-700 hov-bounce hov-shaddow buy__button" style="padding:2px 5px !important;">
 												<i style="font-size:26px;" class="las la-shopping-cart"></i>
 											</button>
@@ -785,7 +788,7 @@ class HomeController extends Controller
 									<input type="hidden" name="id" value="'.$product->id.'">
 									<input type="hidden" name="level" value="'.$price["level"].'">
 									<input type="hidden" name="quantity" class="form-control input-number text-center" value="'.$price["count"].'">
-									<button onclick="addSelect('.$price["level"].')" type="button" 
+									<button onclick="addSelect('.$price["level"].')" type="button"
 										class="btn btn-sm btn-styled btn-base-1 btn-icon-left strong-700 hov-bounce hov-shaddow buy__button" style="padding:2px 5px !important;">
 										<i style="font-size:26px;" class="las la-shopping-cart"></i>
 									</button>
@@ -793,7 +796,7 @@ class HomeController extends Controller
 							</td>
 						</tr>';
 					}
-					
+
 				endforeach;
 
 
@@ -804,14 +807,14 @@ class HomeController extends Controller
 			else:
 				echo '<p class="pt-3 text-center">Оптовые цены отсутствует</p>';
 			endif;
-			
-			
+
+
         }
         else{
 			return "товар не найден";
 		}
     }
-	
+
 	public function dillers_delete(Request $request){
 		$id = $request->id;
 		Order::where('user_id', $id)->delete();
@@ -824,24 +827,24 @@ class HomeController extends Controller
         flash(__('Something went wrong'))->error();
         return back();
 	}
-	
+
 	public function dillers_info(Request $request)
     {
 		$id = $request->user_id;
 		$user = User::where('id', $id)->first();
     	return view('frontend.supplier.dillers_info', compact('user'));
     }
-	
+
 	public function dillers_level(Request $request)
-	{	
+	{
 		$user = User::findOrFail($request->user_id);
 		$brands = Subbrand::all();
 		$supplier_levels = SupplierLevel::where("user_id",$request->user_id)->get();
 		return view('frontend.supplier.dillers_level',compact('user','brands','supplier_levels'));
 	}
-	
+
 	public function dillers_edit(Request $request,$id)
-	{	
+	{
 		if($request->has('level')){
 			$levels = $request->level;
 			$brands = $request->brand;
@@ -860,13 +863,13 @@ class HomeController extends Controller
             return back();
         }
 	}
-	
+
 	public function orders_combine(Request $request){
 		if(!is_null($request->orders)){
 			$orders = $request->orders;
-			
+
 			if(isset($request->is_combine) AND !is_null($request->is_combine) AND $request->is_combine == 1){
-				
+
 				if(count($orders) < 2){
 					flash("Выберите минимум 2 заказа!")->error();
 					return back();
@@ -902,7 +905,7 @@ class HomeController extends Controller
 					$order_new->user_id = Auth::user()->id;
 					$order_new->viewed = 0;
 					$order_new->code = date('Ymd-his');
-					
+
 					if($order_new->save()){
 						$order_details = OrderDetail::where('order_id',$order_id)->get();
 						if(isset($order_details)){
@@ -919,13 +922,13 @@ class HomeController extends Controller
 				flash(__('Заказы успешно отправлены!'))->success();
 				return back();
 			}
-			
+
 		}
 
 	   flash(__('Something went wrong'))->error();
         return back();
 	}
-	
+
 	public function payment_method(){
 		$user_payments = UserPayment::where('user_id',Auth::user()->id)->get();
     	return view('frontend.supplier.payment_methods',compact('user_payments'));
@@ -938,15 +941,15 @@ class HomeController extends Controller
 		return redirect()->route('profile');
 	}
 	public function verify_email(){
-		
+
 		$to = $_POST["email"];
 		$from = "info@beezone.kz";
 		$subject = "Beezone";
 		$link = base64_encode($to);
-		
-		$body = "Чтобы потвердить ваш Email, пройдите по ссылке: 
+
+		$body = "Чтобы потвердить ваш Email, пройдите по ссылке:
 		<a href='https://beezone.kz/verification/".$link."'>https://beezone.kz/verification/".$link."</a> ";
-	
+
 		$charset = 'utf-8';
 		mb_language("en");
 		$headers  = "MIME-Version: 1.0 \n" ;
@@ -978,7 +981,7 @@ class HomeController extends Controller
 			return "0";
 		}
 	}
-	
+
 	public function add_payment_method(Request $request){
 		$user_payment = new UserPayment();
 		$user_payment->user_id = Auth::user()->id;
@@ -993,7 +996,7 @@ class HomeController extends Controller
 		}
 		return back();
 	}
-	
+
 	public function delete_payment_method(Request $request){
 		UserPayment::where("id",$request->id)->delete();
 	}

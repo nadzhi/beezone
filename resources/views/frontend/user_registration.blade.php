@@ -30,7 +30,19 @@
                                                     </div>
                                                 </div>
                                             </div>
-
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="form-group">
+                                                    <!-- <label>{{ __('phone') }}</label> -->
+                                                        <div class="input-group input-group--style-1">
+                                                            <input type="text" class="form-control{{ $errors->has('phone') ? ' is-invalid' : '' }}" value="{{ old('phone') }}" placeholder="{{ __('Phone') }}" name="phone" id="phone">
+                                                            <span class="input-group-addon">
+                                                                <i class="text-md la la-mobile"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <div class="row">
                                                 <div class="col-12">
                                                     <div class="form-group">

@@ -17,7 +17,9 @@ class IsUser
     public function handle($request, Closure $next)
     {
         if (Auth::check() && (Auth::user()->user_type == 'customer' || Auth::user()->user_type == 'seller' || Auth::user()->user_type == 'supplier')) {
+
             return $next($request);
+
         }
         else{
             session(['link' => url()->current()]);

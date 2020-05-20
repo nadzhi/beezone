@@ -80,7 +80,18 @@ function morebrands(em){
 
 $(document).ready(function() {
     searchOpen.init();
-    
+
+    $('#phone').mask('+7(999) 999-99-99', {showMaskOnFocus: false, showMaskOnHover: false, clearIncomplete: true });
+
+    $("input[name='inlineRadioOptions']").bind('click', function() {
+        if ($("#phone-radio").is(":checked")) {
+            $("#phone-block").show();
+            $("#email-block").hide();
+        } else {
+            $("#phone-block").hide();
+            $("#email-block").show();
+        }
+    });
 
     $(".xzoom-link").on("click",function(e){
         e.preventDefault();
@@ -122,17 +133,17 @@ $(document).ready(function() {
 				   "Chars: %d": 'Cимволы: %d',
 				}
 			}
-			
+
         });
     });
 
 
-	
+
     $(".all-products").on("click",function(){
         $(".navbar-menu").toggle();
     });
 
-	
+
 
     $(".menu-logo-icon").on("click",function(){
         $(".mobile-navbar-menu").animate({'left': "0px"});
@@ -140,7 +151,7 @@ $(document).ready(function() {
     $(".menu-close-icon").on("click",function(){
         $(".mobile-navbar-menu").animate({'left': "-280px"});
     });
-	
+
 
     $(".mobile-info-btn").on("click",function(){
         $(".mobile-info").toggle();
@@ -272,7 +283,7 @@ $(document).ready(function() {
 
 });
 $(window).on('load', function() {
-    
+
 });
 
 $(window).scroll(function() {
@@ -282,16 +293,16 @@ $(window).scroll(function() {
                 $('.all-category-menu li.active').removeClass('active');
                 $('.all-category-menu li').eq(i).addClass('active');
             }
-    });		
+    });
 
     var b = $(window).scrollTop();
-    
-    if( b > 120 ){		
-        $(".logo-bar-area").addClass("sm-fixed-top");	
+
+    if( b > 120 ){
+        $(".logo-bar-area").addClass("sm-fixed-top");
     } else {
         $(".logo-bar-area").removeClass("sm-fixed-top");
     }
-		
+
 }).scroll();
 
 $(document).ajaxComplete(function(){
@@ -305,23 +316,23 @@ $(document).ajaxComplete(function(){
 
 
 var StickyElement = function(node){
-    var doc = $(document), 
+    var doc = $(document),
     fixed = false,
     anchor = node.find('.sticky-anchor'),
-    content = node.find('.sticky-content'); 
+    content = node.find('.sticky-content');
     var onScroll = function(e){
         var docTop = doc.scrollTop(),
         anchorTop = anchor.offset().top;
         if(docTop > anchorTop){
             if(!fixed){
                 anchor.height(content.outerHeight());
-                content.addClass('fixed');        
+                content.addClass('fixed');
                 fixed = true;
             }
 		} else {
 			if(fixed){
 				anchor.height(0);
-				content.removeClass('fixed'); 
+				content.removeClass('fixed');
 				fixed = false;
 			}
 		}

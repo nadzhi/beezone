@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Session;
 
+//Repository
+use App\Repositories\Message\MessageRepositoryEloquent as Message;
+
 class RegisterController extends Controller
 {
     /*
@@ -53,6 +56,7 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => 'required|string|max:255',
+            'phone' => 'required|string|min:17|unique:users',//|regex:/(0)[0-9]{9}/
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -68,22 +72,27 @@ class RegisterController extends Controller
     {
         $user = User::create([
             'name' => $data['name'],
+            'phone' => $data['phone'],
             'email' => $data['email'],
             'password' => Hash::make($data['password'])
         ]);
-		
 
-        if(BusinessSetting::where('type', 'email_verification')->first()->value != 1){
+        $message = new Message;
+        $message->newSend($user->id, $user->phone);
+
+        if (BusinessSetting::where('type', 'email_verification')->first()->value != 1) {
+
 			$permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyz';
 			$user->hash = $user->id.substr(str_shuffle($permitted_chars), 0, 10);
 			$user->referal = Session::get("referal",NULL);
             $user->email_verified_at = date('Y-m-d H:m:s');
             $user->user_type = 'supplier';
             $user->save();
-            flash(__('Registration successfull.'))->success();
+            flash(__('Registration successful.'))->success();
+
         }
         else {
-            flash(__('Registration successfull. Please verify your email.'))->success();
+            flash(__('Registration successful. Please verify your email.'))->success();
         }
 
         $customer = new Supplier;

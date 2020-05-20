@@ -6,6 +6,9 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\IsSeller;
 use App\Http\Middleware\IsUser;
 use App\Http\Middleware\IsSupplier;
+use App\Http\Middleware\PhoneCheck;
+use App\Http\Middleware\Message;
+use App\Http\Middleware\MessageVerified;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -61,6 +64,9 @@ class Kernel extends HttpKernel
         'seller' => IsSeller::class,
         'user' => IsUser::class,
         'supplier' => IsSupplier::class,
+        'phone' => PhoneCheck::class,
+        'message' => Message::class,
+        'message.verified' => MessageVerified::class,
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
