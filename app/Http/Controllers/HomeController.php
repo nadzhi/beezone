@@ -41,21 +41,18 @@ class HomeController extends Controller
 
     public function registration($id = false)
     {
-
 		$user = false;
-		if($id) {
+		if($id){
 			$user = User::where("hash", $id)->first();
-			if($user) {
+			if($user){
 				Session::put('referal', $user->id);
 			}
 		}
 
-        if(Auth::check()) {
+        if(Auth::check()){
             return redirect()->route('home');
         }
-
         return view('frontend.user_registration', compact('user'));
-
     }
 
     // public function user_login(Request $request)
@@ -125,8 +122,8 @@ class HomeController extends Controller
 			$last_day = date("Y-m-t 23:59:59",strtotime("-1 month"));
 			$user_levels = [];
 			$current_orders = Order::where('user_id', Auth::user()->id)->select('id')->get();
-			if (isset($current_orders)) {
-				foreach($current_orders as $current_order) {
+			if(isset($current_orders)){
+				foreach($current_orders as $current_order){
 					$orderDetail = OrderDetail::where([
 						['order_id', '=', $current_order->id],
 						['created_at', '>=', $first_day],
